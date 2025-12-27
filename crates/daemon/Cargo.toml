@@ -3,4 +3,8 @@ name = "daemon"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "ffit-daemon"
+path = "src/main.rs"
+
 [dependencies]
