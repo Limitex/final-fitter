@@ -1,5 +1,5 @@
-mod server;
+mod grpc;
 mod shutdown;
 
-pub use server::Server;
+pub use grpc::Server;
 pub use shutdown::ShutdownSignal;
