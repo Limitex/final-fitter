@@ -14,6 +14,15 @@ clean:
     cargo clean
     rm -rf crates/daemon/src/generated
 
+lint:
+    cargo clippy --all-targets --all-features -- -D warnings
+
+test:
+    cargo test
+
+fix:
+    cargo fix --allow-dirty --allow-staged
+
 # Task to build the project in debug mode
 build: generate
     cargo build
