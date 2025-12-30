@@ -8,3 +8,13 @@ name = "ffit"
 path = "src/main.rs"
 
 [dependencies]
+daemon = { path = "../daemon" }
+tonic = "0.14.2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+tower = "0.5"
+hyper-util = { version = "0.1", features = ["tokio"] }
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.30.1", features = ["signal"] }

@@ -5,7 +5,7 @@ pub mod server;
 pub mod ui;
 pub mod usecase;
 
-mod generated {
+pub mod generated {
     include!("generated/daemon/v1/daemon.v1.rs");
 }
 
