@@ -9,7 +9,7 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     match &args.command {
-        Command::Start => commands::start(&args),
+        Command::Start => commands::start(&args).await,
         Command::Stop => commands::stop(&args),
         Command::Status => commands::status(&args),
         Command::Ping { message } => commands::ping(&args, message).await,

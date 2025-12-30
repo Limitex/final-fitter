@@ -10,7 +10,13 @@ path = "src/main.rs"
 [dependencies]
 daemon = { path = "../daemon" }
 tonic = "0.14.2"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+tokio = { version = "1", features = [
+    "rt-multi-thread",
+    "macros",
+    "net",
+    "process",
+    "time",
+] }
 clap = { version = "4", features = ["derive"] }
 thiserror = "2.0.17"
 tower = "0.5"
