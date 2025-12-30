@@ -1,17 +1,24 @@
 use std::net::SocketAddr;
+#[cfg(unix)]
 use std::path::{Path, PathBuf};
 
-use tokio::net::{TcpListener, UnixListener};
-use tokio_stream::wrappers::{TcpListenerStream, UnixListenerStream};
+use tokio::net::TcpListener;
+#[cfg(unix)]
+use tokio::net::UnixListener;
+use tokio_stream::wrappers::TcpListenerStream;
+#[cfg(unix)]
+use tokio_stream::wrappers::UnixListenerStream;
 
 pub enum ListenerStream {
     Tcp(TcpListenerStream),
+    #[cfg(unix)]
     Unix(UnixListenerStream),
 }
 
 #[derive(Debug, Clone)]
 pub enum ListenAddr {
     Tcp(SocketAddr),
+    #[cfg(unix)]
     Unix(PathBuf),
 }
 
@@ -20,6 +27,7 @@ impl ListenAddr {
         Self::Tcp(addr)
     }
 
+    #[cfg(unix)]
     pub fn unix(path: impl AsRef<Path>) -> Self {
         Self::Unix(path.as_ref().to_path_buf())
     }
@@ -30,6 +38,7 @@ impl ListenAddr {
                 let listener = TcpListener::bind(addr).await?;
                 Ok(ListenerStream::Tcp(TcpListenerStream::new(listener)))
             }
+            #[cfg(unix)]
             Self::Unix(path) => {
                 if path.exists() {
                     std::fs::remove_file(path)?;
@@ -41,6 +50,7 @@ impl ListenAddr {
     }
 
     pub fn cleanup(&self) {
+        #[cfg(unix)]
         if let Self::Unix(path) = self {
             let _ = std::fs::remove_file(path);
         }
@@ -51,6 +61,7 @@ impl std::fmt::Display for ListenAddr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Tcp(addr) => write!(f, "tcp://{}", addr),
+            #[cfg(unix)]
             Self::Unix(path) => write!(f, "unix://{}", path.display()),
         }
     }

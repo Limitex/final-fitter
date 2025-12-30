@@ -1,9 +1,6 @@
-use std::path::Path;
+use tonic::transport::{Channel, Endpoint};
 
-use tonic::transport::{Channel, Endpoint, Uri};
-use tower::service_fn;
-
-use crate::cli::config::{CONNECT_TIMEOUT, UDS_DUMMY_URI};
+use crate::cli::config::CONNECT_TIMEOUT;
 use crate::cli::Args;
 use crate::error::{CtlError, Result};
 
@@ -14,7 +11,8 @@ pub async fn connect(args: &Args) -> Result<Channel> {
         return connect_tcp(&args.tcp_addr).await;
     }
 
-    // Try UDS first
+    // Try UDS first (Unix only)
+    #[cfg(unix)]
     if args.socket.exists() {
         match connect_uds(&args.socket).await {
             Ok(channel) => return Ok(channel),
@@ -28,7 +26,12 @@ pub async fn connect(args: &Args) -> Result<Channel> {
     connect_tcp(&args.tcp_addr).await
 }
 
-async fn connect_uds(path: &Path) -> Result<Channel> {
+#[cfg(unix)]
+async fn connect_uds(path: &std::path::Path) -> Result<Channel> {
+    use crate::cli::config::UDS_DUMMY_URI;
+    use tonic::transport::Uri;
+    use tower::service_fn;
+
     let path = path.to_path_buf();
 
     let channel = Endpoint::from_static(UDS_DUMMY_URI)

@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use crate::di::Container;
 use crate::server::listener::{ListenAddr, ListenerStream};
-use crate::server::shutdown::{ShutdownSignal, wait_for_signal};
+use crate::server::shutdown::{wait_for_signal, ShutdownSignal};
 use crate::ui::GrpcRouter;
 
 pub struct ServerConfig {
     pub tcp: Option<ListenAddr>,
+    #[cfg(unix)]
     pub uds: Option<ListenAddr>,
 }
 
@@ -14,6 +15,7 @@ impl ServerConfig {
     pub fn new() -> Self {
         Self {
             tcp: None,
+            #[cfg(unix)]
             uds: None,
         }
     }
@@ -23,6 +25,7 @@ impl ServerConfig {
         self
     }
 
+    #[cfg(unix)]
     pub fn with_uds(mut self, path: impl AsRef<std::path::Path>) -> Self {
         self.uds = Some(ListenAddr::unix(path));
         self
@@ -75,7 +78,8 @@ impl Server {
             handles.push(handle);
         }
 
-        // UDS
+        // UDS (Unix only)
+        #[cfg(unix)]
         if let Some(addr) = &self.config.uds {
             let stream = addr.bind().await?;
             let container = Arc::clone(&container);
@@ -113,6 +117,7 @@ impl Server {
             let _ = handle.await;
         }
 
+        #[cfg(unix)]
         if let Some(addr) = &self.config.uds {
             addr.cleanup();
         }

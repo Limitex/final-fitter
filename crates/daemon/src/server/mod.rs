@@ -1,5 +1,6 @@
 mod grpc;
 mod listener;
+pub mod process;
 mod shutdown;
 
 pub use grpc::{Server, ServerConfig};

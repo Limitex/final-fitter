@@ -21,3 +21,7 @@ tonic-prost = "0.14.2"
 tonic-reflection = "0.14.2"
 prost = "0.14.1"
 tower = "0.5"
+clap = { version = "4", features = ["derive"] }
+
+[target.'cfg(unix)'.dependencies]
+daemonize = "0.5"
