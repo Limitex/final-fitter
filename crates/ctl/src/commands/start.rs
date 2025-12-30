@@ -1,4 +1,3 @@
-
 use tokio::process::Command;
 
 use crate::cli::Args;
@@ -18,7 +17,7 @@ pub async fn execute(args: &Args) -> Result<()> {
         .arg("--socket")
         .arg(&args.socket)
         .arg("--tcp-addr")
-        .arg(args.tcp_addr.trim_start_matches("http://"))
+        .arg(&args.tcp_addr)
         .status()
         .await
         .map_err(|e| {

@@ -1,7 +1,7 @@
 use tonic::transport::{Channel, Endpoint};
 
-use crate::cli::config::CONNECT_TIMEOUT;
 use crate::cli::Args;
+use crate::cli::config::{CONNECT_TIMEOUT, to_http_uri};
 use crate::error::{CtlError, Result};
 
 /// Connect to daemon, preferring UDS over TCP unless --tcp flag is set
@@ -51,7 +51,10 @@ async fn connect_uds(path: &std::path::Path) -> Result<Channel> {
 }
 
 async fn connect_tcp(addr: &str) -> Result<Channel> {
-    let channel = Channel::from_shared(addr.to_string())
+    // Ensure the address has a scheme (http://)
+    let uri = to_http_uri(addr);
+
+    let channel = Channel::from_shared(uri)
         .map_err(|e| CtlError::ConnectionFailed(format!("invalid address: {}", e)))?
         .connect_timeout(CONNECT_TIMEOUT)
         .connect()

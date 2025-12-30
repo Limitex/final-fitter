@@ -2,11 +2,9 @@ use std::time::Duration;
 
 // Re-export shared constants from daemon
 pub use daemon::cli::config::{
-    DAEMON_BINARY, DEFAULT_PID_FILE, DEFAULT_SOCKET_PATH, default_pid_file, default_socket_path,
+    DAEMON_BINARY, DEFAULT_PID_FILE, DEFAULT_SOCKET_PATH, DEFAULT_TCP_ADDR, default_pid_file,
+    default_socket_path,
 };
-
-/// Default TCP address (with http:// scheme for client)
-pub const DEFAULT_TCP_ADDR: &str = "http://[::1]:50051";
 
 /// Connection timeout for gRPC clients
 pub const CONNECT_TIMEOUT: Duration = Duration::from_secs(3);
@@ -26,3 +24,12 @@ pub const GRACEFUL_SHUTDOWN_ATTEMPTS: u32 = 30;
 
 /// Interval between shutdown polling
 pub const SHUTDOWN_POLL_INTERVAL: Duration = Duration::from_millis(100);
+
+/// Convert a host:port address to an HTTP URI
+pub fn to_http_uri(addr: &str) -> String {
+    if addr.starts_with("http://") || addr.starts_with("https://") {
+        addr.to_string()
+    } else {
+        format!("http://{}", addr)
+    }
+}
