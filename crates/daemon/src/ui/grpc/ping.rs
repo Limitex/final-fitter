@@ -17,10 +17,7 @@ impl PingService for PingHandler {
     async fn ping(&self, request: Request<PingRequest>) -> Result<Response<PingResponse>, Status> {
         let req = request.into_inner();
 
-        let message = self
-            .use_case
-            .ping(req.message)
-            .map_err(|e| Status::internal(e.to_string()))?;
+        let message = self.use_case.ping(req.message).map_err(Status::from)?;
 
         Ok(Response::new(PingResponse { message }))
     }
