@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
 use crate::di::Container;
+use crate::server::shutdown::wait_for_signal;
 use crate::ui::GrpcRouter;
 
 pub struct Server {
@@ -18,8 +19,14 @@ impl Server {
 
         println!("Server listening on {}", self.addr);
 
-        router.serve(self.addr).await?;
+        router
+            .serve_with_shutdown(self.addr, async {
+                wait_for_signal().await;
+                println!("Shutting down gracefully...");
+            })
+            .await?;
 
+        println!("Server stopped");
         Ok(())
     }
 }
