@@ -1,0 +1,67 @@
+use std::fs;
+use std::path::Path;
+
+use crate::error::{CtlError, Result};
+
+/// Read PID from file
+pub fn read_pid(pid_file: &Path) -> Result<i32> {
+    let contents = fs::read_to_string(pid_file)
+        .map_err(|_| CtlError::PidFileNotFound(pid_file.to_path_buf()))?;
+
+    contents
+        .trim()
+        .parse()
+        .map_err(|_| CtlError::InvalidPid(contents.trim().to_string()))
+}
+
+/// Write PID to file
+pub fn write_pid(pid_file: &Path, pid: u32) -> Result<()> {
+    fs::write(pid_file, pid.to_string()).map_err(CtlError::PidFileWriteFailed)
+}
+
+/// Remove PID file
+pub fn remove_pid_file(pid_file: &Path) {
+    let _ = fs::remove_file(pid_file);
+}
+
+/// Check if daemon is running based on PID file
+pub fn is_running(pid_file: &Path) -> bool {
+    read_pid(pid_file).map(process_exists).unwrap_or(false)
+}
+
+#[derive(Clone, Copy)]
+pub enum Signal {
+    Term,
+    Kill,
+}
+
+#[cfg(unix)]
+pub fn send_signal(pid: i32, signal: Signal) -> Result<()> {
+    use nix::sys::signal::{kill, Signal as NixSignal};
+    use nix::unistd::Pid;
+
+    let sig = match signal {
+        Signal::Term => NixSignal::SIGTERM,
+        Signal::Kill => NixSignal::SIGKILL,
+    };
+
+    kill(Pid::from_raw(pid), sig).map_err(|e| CtlError::SignalFailed(e.to_string()))
+}
+
+#[cfg(not(unix))]
+pub fn send_signal(_pid: i32, _signal: Signal) -> Result<()> {
+    Err(CtlError::UnsupportedPlatform)
+}
+
+#[cfg(unix)]
+pub fn process_exists(pid: i32) -> bool {
+    use nix::sys::signal::kill;
+    use nix::unistd::Pid;
+
+    kill(Pid::from_raw(pid), None).is_ok()
+}
+
+#[cfg(not(unix))]
+pub fn process_exists(_pid: i32) -> bool {
+    false
+}

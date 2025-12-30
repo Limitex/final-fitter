@@ -202,11 +202,11 @@ version = "0.1.0"
 name = "ctl"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "clap",
  "daemon",
  "hyper-util",
  "nix",
+ "thiserror",
  "tokio",
  "tonic",
  "tower",
