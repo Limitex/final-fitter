@@ -1,4 +1,4 @@
-use crate::domain::{self, PingMessage};
+use crate::domain::{self, DomainError, PingMessage};
 
 pub struct PingUseCase;
 
@@ -7,10 +7,10 @@ impl PingUseCase {
         Self
     }
 
-    pub fn ping(&self, message: String) -> String {
-        let ping = PingMessage::new(message);
+    pub fn ping(&self, message: String) -> Result<String, DomainError> {
+        let ping = PingMessage::new(message)?;
         let pong = domain::create_pong(&ping);
-        pong.value().to_string()
+        Ok(pong.value().to_string())
     }
 }
 
