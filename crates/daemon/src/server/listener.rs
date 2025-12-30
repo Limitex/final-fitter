@@ -49,8 +49,8 @@ impl ListenAddr {
         }
     }
 
+    #[cfg(unix)]
     pub fn cleanup(&self) {
-        #[cfg(unix)]
         if let Self::Unix(path) = self {
             let _ = std::fs::remove_file(path);
         }

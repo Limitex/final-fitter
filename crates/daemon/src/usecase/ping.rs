@@ -1,5 +1,6 @@
 use crate::domain::{DomainError, PingMessage};
 
+#[derive(Default)]
 pub struct PingUseCase;
 
 impl PingUseCase {
@@ -11,11 +12,5 @@ impl PingUseCase {
         let ping = PingMessage::new(message)?;
         let pong = ping.to_pong();
         Ok(pong.value().to_string())
-    }
-}
-
-impl Default for PingUseCase {
-    fn default() -> Self {
-        Self::new()
     }
 }

@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use crate::di::Container;
 use crate::server::listener::{ListenAddr, ListenerStream};
-use crate::server::shutdown::{wait_for_signal, ShutdownSignal};
+use crate::server::shutdown::{ShutdownSignal, wait_for_signal};
 use crate::ui::GrpcRouter;
 
+#[derive(Default)]
 pub struct ServerConfig {
     pub tcp: Option<ListenAddr>,
     #[cfg(unix)]
@@ -13,11 +14,7 @@ pub struct ServerConfig {
 
 impl ServerConfig {
     pub fn new() -> Self {
-        Self {
-            tcp: None,
-            #[cfg(unix)]
-            uds: None,
-        }
+        Self::default()
     }
 
     pub fn with_tcp(mut self, addr: std::net::SocketAddr) -> Self {
@@ -29,12 +26,6 @@ impl ServerConfig {
     pub fn with_uds(mut self, path: impl AsRef<std::path::Path>) -> Self {
         self.uds = Some(ListenAddr::unix(path));
         self
-    }
-}
-
-impl Default for ServerConfig {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
