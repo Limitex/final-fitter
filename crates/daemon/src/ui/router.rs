@@ -1,12 +1,12 @@
+use crate::di::Container;
 use crate::generated::FILE_DESCRIPTOR_SET;
 use crate::generated::ping_service_server::PingServiceServer;
-use crate::ui::grpc::PingHandler;
 use tonic::transport::server::Router;
 
 pub struct GrpcRouter;
 
 impl GrpcRouter {
-    pub fn build(ping_handler: PingHandler) -> Router {
+    pub fn build(container: &Container) -> Router {
         let reflection = tonic_reflection::server::Builder::configure()
             .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
             .build_v1()
@@ -14,6 +14,6 @@ impl GrpcRouter {
 
         tonic::transport::Server::builder()
             .add_service(reflection)
-            .add_service(PingServiceServer::new(ping_handler))
+            .add_service(PingServiceServer::from_arc(container.ping_handler.clone()))
     }
 }

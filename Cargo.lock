@@ -95,9 +95,11 @@ dependencies = [
  "prost",
  "thiserror",
  "tokio",
+ "tokio-stream",
  "tonic",
  "tonic-prost",
  "tonic-reflection",
+ "tower",
 ]
 
 [[package]]

@@ -1,7 +1,10 @@
-use daemon::Server;
+use daemon::{Server, server::ServerConfig};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:50051".parse()?;
-    Server::new(addr).run().await
+    let config = ServerConfig::new()
+        .with_tcp("[::1]:50051".parse()?)
+        .with_uds("/tmp/ffit-daemon.sock");
+
+    Server::new(config).run().await
 }

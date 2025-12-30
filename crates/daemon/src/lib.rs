@@ -9,4 +9,4 @@ mod generated {
     include!("generated/daemon/v1/daemon.v1.rs");
 }
 
-pub use server::Server;
+pub use server::{Server, ServerConfig};
