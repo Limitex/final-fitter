@@ -103,9 +103,12 @@ pub mod ping_service_client {
                     )
                 })?;
             let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/ping.v1.PingService/Ping");
+            let path = http::uri::PathAndQuery::from_static(
+                "/daemon.v1.PingService/Ping",
+            );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("ping.v1.PingService", "Ping"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("daemon.v1.PingService", "Ping"));
             self.inner.unary(req, path, codec).await
         }
     }
@@ -204,7 +207,7 @@ pub mod ping_service_server {
         }
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             match req.uri().path() {
-                "/ping.v1.PingService/Ping" => {
+                "/daemon.v1.PingService/Ping" => {
                     #[allow(non_camel_case_types)]
                     struct PingSvc<T: PingService>(pub Arc<T>);
                     impl<T: PingService> tonic::server::UnaryService<super::PingRequest>
@@ -282,7 +285,7 @@ pub mod ping_service_server {
         }
     }
     /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "ping.v1.PingService";
+    pub const SERVICE_NAME: &str = "daemon.v1.PingService";
     impl<T> tonic::server::NamedService for PingServiceServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }

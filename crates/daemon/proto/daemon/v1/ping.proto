@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package ping.v1;
+package daemon.v1;
 
 service PingService {
   rpc Ping(PingRequest) returns (PingResponse);

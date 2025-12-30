@@ -6,7 +6,7 @@ pub mod ui;
 pub mod usecase;
 
 mod generated {
-    include!("generated/ping/v1/ping.v1.rs");
+    include!("generated/daemon/v1/daemon.v1.rs");
 }
 
 pub use server::Server;
