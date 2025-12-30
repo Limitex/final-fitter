@@ -2,4 +2,4 @@ mod error;
 mod ping;
 
 pub use error::DomainError;
-pub use ping::*;
+pub use ping::PingMessage;

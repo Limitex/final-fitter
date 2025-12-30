@@ -17,8 +17,11 @@ impl PingMessage {
     pub fn value(&self) -> &str {
         &self.value
     }
-}
 
-pub fn create_pong(message: &PingMessage) -> PingMessage {
-    PingMessage::new(format!("pong: {}", message.value())).unwrap()
+    /// Creates a pong response from this message.
+    pub fn to_pong(&self) -> Self {
+        Self {
+            value: format!("pong: {}", self.value),
+        }
+    }
 }
