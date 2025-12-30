@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
-use tokio::sync::broadcast;
-
 use crate::di::Container;
 use crate::server::listener::{ListenAddr, ListenerStream};
-use crate::server::shutdown::wait_for_signal;
+use crate::server::shutdown::{ShutdownSignal, wait_for_signal};
 use crate::ui::GrpcRouter;
 
 pub struct ServerConfig {
@@ -48,7 +46,7 @@ impl Server {
 
     pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
         let container = Arc::new(Container::new());
-        let (shutdown_tx, _) = broadcast::channel::<()>(1);
+        let shutdown = ShutdownSignal::new();
 
         let mut handles = Vec::new();
 
@@ -56,7 +54,7 @@ impl Server {
         if let Some(addr) = &self.config.tcp {
             let stream = addr.bind().await?;
             let container = Arc::clone(&container);
-            let mut shutdown_rx = shutdown_tx.subscribe();
+            let shutdown = shutdown.clone();
             let addr_display = addr.to_string();
 
             println!("Listening on {}", addr_display);
@@ -65,9 +63,7 @@ impl Server {
                 if let ListenerStream::Tcp(listener) = stream {
                     let router = GrpcRouter::build(&container);
                     let result = router
-                        .serve_with_incoming_shutdown(listener, async move {
-                            let _ = shutdown_rx.recv().await;
-                        })
+                        .serve_with_incoming_shutdown(listener, shutdown.wait())
                         .await;
 
                     if let Err(e) = result {
@@ -83,7 +79,7 @@ impl Server {
         if let Some(addr) = &self.config.uds {
             let stream = addr.bind().await?;
             let container = Arc::clone(&container);
-            let mut shutdown_rx = shutdown_tx.subscribe();
+            let shutdown = shutdown.clone();
             let addr_display = addr.to_string();
 
             println!("Listening on {}", addr_display);
@@ -92,9 +88,7 @@ impl Server {
                 if let ListenerStream::Unix(listener) = stream {
                     let router = GrpcRouter::build(&container);
                     let result = router
-                        .serve_with_incoming_shutdown(listener, async move {
-                            let _ = shutdown_rx.recv().await;
-                        })
+                        .serve_with_incoming_shutdown(listener, shutdown.wait())
                         .await;
 
                     if let Err(e) = result {
@@ -113,7 +107,7 @@ impl Server {
         wait_for_signal().await;
         println!("Shutting down gracefully...");
 
-        let _ = shutdown_tx.send(());
+        shutdown.trigger();
 
         for handle in handles {
             let _ = handle.await;
