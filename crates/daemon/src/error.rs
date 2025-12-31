@@ -19,6 +19,9 @@ pub enum DaemonError {
     #[error("no listeners configured")]
     NoListenersConfigured,
 
+    #[error("failed to build gRPC reflection: {0}")]
+    ReflectionError(String),
+
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
 
