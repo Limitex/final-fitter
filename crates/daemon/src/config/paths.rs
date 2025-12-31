@@ -5,7 +5,7 @@ use directories::ProjectDirs;
 pub const APP_NAME: &str = "ffit";
 pub const DAEMON_BINARY: &str = "ffit-daemon";
 pub const ENV_PREFIX: &str = "FFIT_";
-pub const DEFAULT_TCP_ADDR: &str = "[::1]:50051";
+pub const DEFAULT_TCP_ADDR: &str = "127.0.0.1:50051";
 pub const DEFAULT_WORKDIR: &str = "/";
 
 /// XDG-compliant paths on Linux, appropriate paths on macOS/Windows.
