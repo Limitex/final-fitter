@@ -27,10 +27,8 @@ fn main() -> Result<()> {
         "Configuration loaded"
     );
 
-    debug!(lock_file = %config.lock_file.display(), "Acquiring lock");
-    let _lock_guard = LockGuard::try_acquire(&config.lock_file)?;
-    debug!("Lock acquired");
-
+    // Daemonize first, then acquire lock in the child process
+    // (flock is not inherited across fork, so we must acquire it after daemonizing)
     if !config.foreground {
         if process::is_daemon_supported() {
             info!("Daemonizing process");
@@ -39,6 +37,10 @@ fn main() -> Result<()> {
             warn!("Daemon mode not supported on this platform, running in foreground");
         }
     }
+
+    debug!(lock_file = %config.lock_file.display(), "Acquiring lock");
+    let _lock_guard = LockGuard::try_acquire(&config.lock_file)?;
+    debug!("Lock acquired");
 
     info!("Starting server");
     tokio::runtime::Runtime::new()?.block_on(run_server(config))
