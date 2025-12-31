@@ -1,0 +1,58 @@
+# ffit Configuration File Example
+#
+# Configuration priority (lowest to highest):
+# 1. Default values (built-in)
+# 2. System config file: /etc/ffit/config.toml
+# 3. User config file: ~/.config/ffit/config.toml
+# 4. Environment variables: FFIT_<KEY> (e.g., FFIT_TCP_ADDR)
+# 5. CLI arguments
+#
+# Copy this file to:
+#   - ~/.config/ffit/config.toml (user config)
+#   - /etc/ffit/config.toml (system config)
+
+
+# Daemon Configuration
+
+# Run daemon in foreground (don't daemonize)
+# Default: false
+# Environment: FFIT_FOREGROUND
+foreground = false
+
+# TCP listen address for gRPC server
+# Default: "[::1]:50051"
+# Environment: FFIT_TCP_ADDR
+tcp_addr = "[::1]:50051"
+
+# Unix domain socket path (Unix only)
+# Default: "/tmp/ffit-daemon.sock"
+# Environment: FFIT_SOCKET
+socket = "/tmp/ffit-daemon.sock"
+
+# PID file path
+# Default: "/tmp/ffit-daemon.pid"
+# Environment: FFIT_PID_FILE
+pid_file = "/tmp/ffit-daemon.pid"
+
+# Log file path (used in daemon mode)
+# Default: "/tmp/ffit-daemon.log"
+# Environment: FFIT_LOG_FILE
+log_file = "/tmp/ffit-daemon.log"
+
+# Working directory for daemon
+# Default: "/"
+# Environment: FFIT_WORKDIR
+workdir = "/"
+
+
+# Control CLI Configuration
+
+# Force TCP connection instead of Unix socket
+# Default: false
+# Environment: FFIT_TCP
+tcp = false
+
+# Connection timeout in seconds
+# Default: 3
+# Environment: FFIT_CONNECT_TIMEOUT_SECS
+connect_timeout_secs = 3

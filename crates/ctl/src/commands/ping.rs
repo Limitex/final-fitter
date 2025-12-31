@@ -1,14 +1,14 @@
 use daemon::generated::{PingRequest, ping_service_client::PingServiceClient};
 
-use crate::cli::Args;
+use crate::config::CtlConfig;
 use crate::error::{CtlError, Result};
 use crate::infra::grpc::connect;
 use crate::infra::process::is_running;
 
-pub async fn execute(args: &Args, message: &str) -> Result<()> {
-    require_running(args)?;
+pub async fn execute(config: &CtlConfig, message: &str) -> Result<()> {
+    require_running(config)?;
 
-    let channel = connect(args).await?;
+    let channel = connect(config).await?;
 
     let mut client = PingServiceClient::new(channel);
     let response = client
@@ -21,8 +21,8 @@ pub async fn execute(args: &Args, message: &str) -> Result<()> {
     Ok(())
 }
 
-fn require_running(args: &Args) -> Result<()> {
-    if !is_running(&args.pid_file) {
+fn require_running(config: &CtlConfig) -> Result<()> {
+    if !is_running(&config.pid_file) {
         return Err(CtlError::DaemonNotRunning);
     }
     Ok(())

@@ -6,6 +6,9 @@ pub type Result<T> = std::result::Result<T, CtlError>;
 
 #[derive(Debug, Error)]
 pub enum CtlError {
+    #[error("configuration error: {0}")]
+    ConfigError(#[from] Box<figment::Error>),
+
     #[error("daemon is already running")]
     DaemonAlreadyRunning,
 

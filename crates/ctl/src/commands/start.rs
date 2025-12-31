@@ -1,23 +1,22 @@
 use tokio::process::Command;
 
-use crate::cli::Args;
-use crate::cli::config::{DAEMON_BINARY, DAEMON_START_POLL_INTERVAL, DAEMON_START_RETRIES};
+use crate::config::{CtlConfig, DAEMON_BINARY, DAEMON_START_POLL_INTERVAL, DAEMON_START_RETRIES};
 use crate::error::{CtlError, Result};
 use crate::infra::process::{is_running, process_exists, read_pid};
 
-pub async fn execute(args: &Args) -> Result<()> {
-    if is_running(&args.pid_file) {
+pub async fn execute(config: &CtlConfig) -> Result<()> {
+    if is_running(&config.pid_file) {
         return Err(CtlError::DaemonAlreadyRunning);
     }
 
     // Daemon handles its own daemonization via daemonize crate
     let status = Command::new(DAEMON_BINARY)
         .arg("--pid-file")
-        .arg(&args.pid_file)
+        .arg(&config.pid_file)
         .arg("--socket")
-        .arg(&args.socket)
+        .arg(&config.socket)
         .arg("--tcp-addr")
-        .arg(&args.tcp_addr)
+        .arg(&config.tcp_addr)
         .status()
         .await
         .map_err(|e| {
@@ -34,7 +33,7 @@ pub async fn execute(args: &Args) -> Result<()> {
     // Wait briefly for daemon to start and write PID file
     for _ in 0..DAEMON_START_RETRIES {
         tokio::time::sleep(DAEMON_START_POLL_INTERVAL).await;
-        if let Ok(pid) = read_pid(&args.pid_file)
+        if let Ok(pid) = read_pid(&config.pid_file)
             && process_exists(pid)
         {
             println!("Started daemon (PID: {})", pid);

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-use super::config::{
+use crate::config::{
     DEFAULT_LOG_FILE, DEFAULT_PID_FILE, DEFAULT_SOCKET_PATH, DEFAULT_TCP_ADDR, DEFAULT_WORKDIR,
 };
 
