@@ -1,6 +1,7 @@
 use std::fs::{File, OpenOptions};
-use std::io;
 use std::path::Path;
+
+use crate::error::{DaemonError, Result};
 
 #[cfg(unix)]
 use nix::fcntl::{Flock, FlockArg};
@@ -13,7 +14,7 @@ pub struct LockGuard {
 
 #[cfg(unix)]
 impl LockGuard {
-    pub fn try_acquire(lock_path: &Path) -> io::Result<Self> {
+    pub fn try_acquire(lock_path: &Path) -> Result<Self> {
         if let Some(parent) = lock_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -28,9 +29,9 @@ impl LockGuard {
         // Non-blocking: fail immediately if another daemon holds the lock
         let flock = Flock::lock(file, FlockArg::LockExclusiveNonblock).map_err(|(_, errno)| {
             if errno == nix::errno::Errno::EWOULDBLOCK {
-                io::Error::new(io::ErrorKind::WouldBlock, "daemon is already running")
+                DaemonError::AlreadyRunning
             } else {
-                io::Error::from_raw_os_error(errno as i32)
+                DaemonError::LockError(errno.to_string())
             }
         })?;
 
@@ -43,7 +44,7 @@ pub struct LockGuard;
 
 #[cfg(not(unix))]
 impl LockGuard {
-    pub fn try_acquire(_lock_path: &Path) -> io::Result<Self> {
+    pub fn try_acquire(_lock_path: &Path) -> Result<Self> {
         Ok(Self)
     }
 }

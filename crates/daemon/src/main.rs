@@ -1,20 +1,18 @@
 use clap::Parser;
 use daemon::cli::Args;
 use daemon::config::DaemonConfig;
+use daemon::error::Result;
 use daemon::server::LockGuard;
 use daemon::server::process;
 use daemon::{Server, ServerConfig};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
-    let config = DaemonConfig::load()
-        .map_err(|e| format!("Failed to load configuration: {}", e))?
-        .with_foreground(args.foreground);
+    let config = DaemonConfig::load()?.with_foreground(args.foreground);
 
     // Acquire lock before daemonizing to prevent TOCTOU race
-    let _lock_guard = LockGuard::try_acquire(&config.lock_file)
-        .map_err(|e| format!("Failed to acquire lock: {}", e))?;
+    let _lock_guard = LockGuard::try_acquire(&config.lock_file)?;
 
     if !config.foreground {
         if process::is_daemon_supported() {
@@ -27,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::runtime::Runtime::new()?.block_on(run_server(config))
 }
 
-async fn run_server(config: DaemonConfig) -> Result<(), Box<dyn std::error::Error>> {
+async fn run_server(config: DaemonConfig) -> Result<()> {
     let mut server_config = ServerConfig::new().with_tcp(config.tcp_addr.parse()?);
 
     #[cfg(unix)]

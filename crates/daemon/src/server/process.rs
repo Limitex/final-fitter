@@ -1,7 +1,8 @@
 use crate::config::DaemonConfig;
+use crate::error::{DaemonError, Result};
 
 #[cfg(unix)]
-pub fn daemonize(config: &DaemonConfig) -> Result<(), Box<dyn std::error::Error>> {
+pub fn daemonize(config: &DaemonConfig) -> Result<()> {
     use daemonize::Daemonize;
     use std::fs::OpenOptions;
 
@@ -19,14 +20,16 @@ pub fn daemonize(config: &DaemonConfig) -> Result<(), Box<dyn std::error::Error>
         .stdout(log_file)
         .stderr(err_file)
         .start()
-        .map_err(|e| format!("Failed to daemonize: {}", e))?;
+        .map_err(|e| DaemonError::DaemonizeError(e.to_string()))?;
 
     Ok(())
 }
 
 #[cfg(not(unix))]
-pub fn daemonize(_config: &DaemonConfig) -> Result<(), Box<dyn std::error::Error>> {
-    Err("Daemon mode not supported on this platform".into())
+pub fn daemonize(_config: &DaemonConfig) -> Result<()> {
+    Err(DaemonError::DaemonizeError(
+        "Daemon mode not supported on this platform".to_string(),
+    ))
 }
 
 pub const fn is_daemon_supported() -> bool {

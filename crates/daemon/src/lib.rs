@@ -2,6 +2,7 @@ pub mod cli;
 pub mod config;
 pub mod di;
 pub mod domain;
+pub mod error;
 pub mod infra;
 pub mod server;
 pub mod ui;
@@ -12,4 +13,5 @@ pub mod generated {
 }
 
 pub use config::DaemonConfig;
+pub use error::{DaemonError, Result};
 pub use server::{Server, ServerConfig};

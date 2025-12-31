@@ -1,4 +1,5 @@
-use crate::domain::{DomainError, PingMessage};
+use crate::domain::PingMessage;
+use crate::error::DaemonError;
 
 #[derive(Default)]
 pub struct PingUseCase;
@@ -8,7 +9,7 @@ impl PingUseCase {
         Self
     }
 
-    pub fn ping(&self, message: String) -> Result<String, DomainError> {
+    pub fn ping(&self, message: String) -> Result<String, DaemonError> {
         let ping = PingMessage::new(message)?;
         let pong = ping.to_pong();
         Ok(pong.value().to_string())

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::di::Container;
+use crate::error::{DaemonError, Result};
 use crate::server::listener::{ListenAddr, ListenerStream};
 use crate::server::shutdown::{ShutdownSignal, wait_for_signal};
 use crate::ui::GrpcRouter;
@@ -38,7 +39,7 @@ impl Server {
         Self { config }
     }
 
-    pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn run(self) -> Result<()> {
         let container = Arc::new(Container::new());
         let shutdown = ShutdownSignal::new();
 
@@ -94,7 +95,7 @@ impl Server {
         }
 
         if handles.is_empty() {
-            return Err("No listeners configured".into());
+            return Err(DaemonError::NoListenersConfigured);
         }
 
         wait_for_signal().await;

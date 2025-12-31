@@ -1,12 +1,12 @@
 use tonic::Status;
 
-use crate::domain::DomainError;
+use crate::error::DaemonError;
 
-impl From<DomainError> for Status {
-    fn from(err: DomainError) -> Self {
+impl From<DaemonError> for Status {
+    fn from(err: DaemonError) -> Self {
         match err {
-            DomainError::EmptyMessage => Status::invalid_argument(err.to_string()),
-            DomainError::InvalidMessage(_) => Status::invalid_argument(err.to_string()),
+            DaemonError::EmptyMessage => Status::invalid_argument(err.to_string()),
+            _ => Status::internal(err.to_string()),
         }
     }
 }

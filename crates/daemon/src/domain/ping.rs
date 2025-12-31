@@ -1,4 +1,4 @@
-use super::error::DomainError;
+use crate::error::DaemonError;
 
 #[derive(Debug, Clone)]
 pub struct PingMessage {
@@ -6,10 +6,10 @@ pub struct PingMessage {
 }
 
 impl PingMessage {
-    pub fn new(value: impl Into<String>) -> Result<Self, DomainError> {
+    pub fn new(value: impl Into<String>) -> Result<Self, DaemonError> {
         let value = value.into();
         if value.is_empty() {
-            return Err(DomainError::EmptyMessage);
+            return Err(DaemonError::EmptyMessage);
         }
         Ok(Self { value })
     }
