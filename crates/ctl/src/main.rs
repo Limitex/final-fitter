@@ -11,7 +11,10 @@ use ctl::log_error;
 #[tokio::main]
 async fn main() -> ExitCode {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("ctl=warn".parse().unwrap()))
+        .with_env_filter(
+            EnvFilter::from_default_env()
+                .add_directive("ctl=warn".parse().expect("static directive is valid")),
+        )
         .init();
 
     if let Err(e) = run().await {
