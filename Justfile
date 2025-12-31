@@ -28,6 +28,7 @@ test:
 # Task to automatically fix linting issues
 fix:
     cargo fix --allow-dirty --allow-staged
+    cargo fmt --all
 
 # Task to build the project in debug mode
 build: generate
