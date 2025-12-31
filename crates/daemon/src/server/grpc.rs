@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
+use tonic::transport::server::Router;
+
 use crate::di::Container;
 use crate::error::{DaemonError, Result};
+use crate::generated::ping_service_server::PingServiceServer;
+use crate::generated::FILE_DESCRIPTOR_SET;
 use crate::server::listener::{ListenAddr, ListenerStream};
 use crate::server::shutdown::{ShutdownSignal, wait_for_signal};
-use crate::ui::GrpcRouter;
 
 #[derive(Default)]
 pub struct ServerConfig {
@@ -55,7 +58,7 @@ impl Server {
 
             let handle = tokio::spawn(async move {
                 if let ListenerStream::Tcp(listener) = stream {
-                    let router = GrpcRouter::build(&container);
+                    let router = build_router(&container);
                     let result = router
                         .serve_with_incoming_shutdown(listener, shutdown.wait())
                         .await;
@@ -80,7 +83,7 @@ impl Server {
 
             let handle = tokio::spawn(async move {
                 if let ListenerStream::Unix(listener) = stream {
-                    let router = GrpcRouter::build(&container);
+                    let router = build_router(&container);
                     let result = router
                         .serve_with_incoming_shutdown(listener, shutdown.wait())
                         .await;
@@ -115,4 +118,15 @@ impl Server {
         println!("Server stopped");
         Ok(())
     }
+}
+
+fn build_router(container: &Container) -> Router {
+    let reflection = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+        .build_v1()
+        .unwrap();
+
+    tonic::transport::Server::builder()
+        .add_service(reflection)
+        .add_service(PingServiceServer::from_arc(container.ping_handler.clone()))
 }
