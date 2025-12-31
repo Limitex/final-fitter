@@ -9,9 +9,6 @@ pub enum CtlError {
     #[error("configuration error: {0}")]
     ConfigError(#[from] Box<figment::Error>),
 
-    #[error("daemon is already running")]
-    DaemonAlreadyRunning,
-
     #[error("daemon is not running (start with: ffit start)")]
     DaemonNotRunning,
 
@@ -26,9 +23,6 @@ pub enum CtlError {
 
     #[error("invalid PID in file: {0}")]
     InvalidPid(String),
-
-    #[error("failed to write PID file: {0}")]
-    PidFileWriteFailed(#[source] std::io::Error),
 
     #[error("failed to send signal to process: {0}")]
     SignalFailed(String),

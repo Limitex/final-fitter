@@ -14,11 +14,6 @@ pub fn read_pid(pid_file: &Path) -> Result<i32> {
         .map_err(|_| CtlError::InvalidPid(contents.trim().to_string()))
 }
 
-/// Write PID to file
-pub fn write_pid(pid_file: &Path, pid: u32) -> Result<()> {
-    fs::write(pid_file, pid.to_string()).map_err(CtlError::PidFileWriteFailed)
-}
-
 /// Remove PID file
 pub fn remove_pid_file(pid_file: &Path) {
     let _ = fs::remove_file(pid_file);

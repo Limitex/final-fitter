@@ -33,6 +33,11 @@ socket = "/tmp/ffit-daemon.sock"
 # Environment: FFIT_PID_FILE
 pid_file = "/tmp/ffit-daemon.pid"
 
+# Lock file path (for exclusive daemon instance)
+# Default: "/tmp/ffit-daemon.lock"
+# Environment: FFIT_LOCK_FILE
+lock_file = "/tmp/ffit-daemon.lock"
+
 # Log file path (used in daemon mode)
 # Default: "/tmp/ffit-daemon.log"
 # Environment: FFIT_LOG_FILE

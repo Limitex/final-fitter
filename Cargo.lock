@@ -238,6 +238,7 @@ dependencies = [
  "daemonize",
  "dirs",
  "figment",
+ "nix",
  "prost",
  "serde",
  "thiserror",

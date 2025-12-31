@@ -1,6 +1,7 @@
 use clap::Parser;
 use daemon::cli::Args;
 use daemon::config::DaemonConfig;
+use daemon::server::LockGuard;
 use daemon::server::process;
 use daemon::{Server, ServerConfig};
 
@@ -12,6 +13,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|e| format!("Failed to load configuration: {}", e))?
         .with_foreground(args.foreground);
 
+    // Acquire exclusive lock before daemonizing to prevent TOCTOU race
+    let _lock_guard = LockGuard::try_acquire(&config.lock_file)
+        .map_err(|e| format!("Failed to acquire lock: {}", e))?;
+
     if !config.foreground {
         if process::is_daemon_supported() {
             process::daemonize(&config)?;
@@ -20,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // Lock is held for the lifetime of the daemon process
     tokio::runtime::Runtime::new()?.block_on(run_server(config))
 }
 

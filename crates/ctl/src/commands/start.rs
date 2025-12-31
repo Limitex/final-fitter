@@ -2,14 +2,11 @@ use tokio::process::Command;
 
 use crate::config::{CtlConfig, DAEMON_BINARY, DAEMON_START_POLL_INTERVAL, DAEMON_START_RETRIES};
 use crate::error::{CtlError, Result};
-use crate::infra::process::{is_running, process_exists, read_pid};
+use crate::infra::process::{process_exists, read_pid};
 
 pub async fn execute(config: &CtlConfig) -> Result<()> {
-    if is_running(&config.pid_file) {
-        return Err(CtlError::DaemonAlreadyRunning);
-    }
-
-    // Daemon loads its own config from file/env, no args needed
+    // Daemon uses flock for exclusive access, so we don't need is_running check here.
+    // If daemon is already running, the new instance will fail to acquire the lock.
     let status = Command::new(DAEMON_BINARY).status().await.map_err(|e| {
         CtlError::DaemonStartFailed(format!("{} (is {} in PATH?)", e, DAEMON_BINARY))
     })?;

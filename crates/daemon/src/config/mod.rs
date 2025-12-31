@@ -13,6 +13,9 @@ pub const DEFAULT_TCP_ADDR: &str = "[::1]:50051";
 /// Default PID file path
 pub const DEFAULT_PID_FILE: &str = "/tmp/ffit-daemon.pid";
 
+/// Default lock file path
+pub const DEFAULT_LOCK_FILE: &str = "/tmp/ffit-daemon.lock";
+
 /// Default log file path
 pub const DEFAULT_LOG_FILE: &str = "/tmp/ffit-daemon.log";
 
@@ -34,6 +37,10 @@ pub fn default_socket_path() -> PathBuf {
 
 pub fn default_pid_file() -> PathBuf {
     PathBuf::from(DEFAULT_PID_FILE)
+}
+
+pub fn default_lock_file() -> PathBuf {
+    PathBuf::from(DEFAULT_LOCK_FILE)
 }
 
 pub fn default_log_file() -> PathBuf {
@@ -64,6 +71,10 @@ pub struct DaemonConfig {
     #[serde(default = "default_pid_file")]
     pub pid_file: PathBuf,
 
+    /// Lock file path for exclusive daemon instance
+    #[serde(default = "default_lock_file")]
+    pub lock_file: PathBuf,
+
     /// Log file path (used in daemon mode)
     #[serde(default = "default_log_file")]
     pub log_file: PathBuf,
@@ -88,6 +99,7 @@ impl Default for DaemonConfig {
             tcp_addr: DEFAULT_TCP_ADDR.to_string(),
             socket: default_socket_path(),
             pid_file: default_pid_file(),
+            lock_file: default_lock_file(),
             log_file: default_log_file(),
             workdir: PathBuf::from(DEFAULT_WORKDIR),
         }
