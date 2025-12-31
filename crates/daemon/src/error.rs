@@ -25,9 +25,6 @@ pub enum DaemonError {
     #[error("invalid address: {0}")]
     InvalidAddress(#[from] std::net::AddrParseError),
 
-    #[error("transport error: {0}")]
-    TransportError(#[from] tonic::transport::Error),
-
     #[error("message cannot be empty")]
     EmptyMessage,
 }

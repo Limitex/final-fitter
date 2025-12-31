@@ -28,12 +28,6 @@ pub enum CtlError {
     #[error("gRPC error: {0}")]
     GrpcError(#[from] tonic::Status),
 
-    #[error("transport error: {0}")]
-    TransportError(#[from] tonic::transport::Error),
-
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-
     #[error("signal handling not supported on this platform")]
     UnsupportedPlatform,
 }
