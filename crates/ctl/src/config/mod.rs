@@ -5,9 +5,10 @@ use figment::Figment;
 use figment::providers::{Env, Format, Serialized, Toml};
 use serde::{Deserialize, Serialize};
 
-// Re-export shared constants from daemon
+// Re-export shared constants and functions from daemon
 pub use daemon::config::{
-    APP_NAME, DAEMON_BINARY, DEFAULT_TCP_ADDR, ENV_PREFIX, default_pid_file, default_socket_path,
+    APP_NAME, AppPaths, DAEMON_BINARY, DEFAULT_TCP_ADDR, ENV_PREFIX, default_pid_file,
+    default_socket_path, default_tcp_addr,
 };
 
 /// Connection timeout for gRPC clients
@@ -67,10 +68,6 @@ pub struct CtlConfig {
     pub connect_timeout_secs: u64,
 }
 
-fn default_tcp_addr() -> String {
-    DEFAULT_TCP_ADDR.to_string()
-}
-
 fn default_connect_timeout_secs() -> u64 {
     CONNECT_TIMEOUT.as_secs()
 }
@@ -80,7 +77,7 @@ impl Default for CtlConfig {
         Self {
             pid_file: default_pid_file(),
             socket: default_socket_path(),
-            tcp_addr: DEFAULT_TCP_ADDR.to_string(),
+            tcp_addr: default_tcp_addr(),
             tcp: false,
             connect_timeout_secs: CONNECT_TIMEOUT.as_secs(),
         }
@@ -100,20 +97,20 @@ impl CtlConfig {
 
     /// Create a Figment instance with all configuration sources
     pub fn figment() -> Figment {
+        let paths = AppPaths::new();
         let mut figment = Figment::new().merge(Serialized::defaults(CtlConfig::default()));
 
         // Add system config file (/etc/ffit/config.toml)
-        let system_config = PathBuf::from("/etc").join(APP_NAME).join("config.toml");
+        let system_config = paths.system_config_file();
         if system_config.exists() {
             figment = figment.merge(Toml::file(&system_config));
         }
 
         // Add user config file (~/.config/ffit/config.toml)
-        if let Some(config_dir) = dirs::config_dir() {
-            let user_config = config_dir.join(APP_NAME).join("config.toml");
-            if user_config.exists() {
-                figment = figment.merge(Toml::file(&user_config));
-            }
+        if let Some(user_config) = paths.user_config_file()
+            && user_config.exists()
+        {
+            figment = figment.merge(Toml::file(&user_config));
         }
 
         // Add environment variables with FFIT_ prefix
@@ -137,17 +134,17 @@ impl CtlConfig {
 
     /// Get the path to the user config directory
     pub fn user_config_dir() -> Option<PathBuf> {
-        dirs::config_dir().map(|p| p.join(APP_NAME))
+        AppPaths::new().config_dir()
     }
 
     /// Get the path to the user config file
     pub fn user_config_file() -> Option<PathBuf> {
-        Self::user_config_dir().map(|p| p.join("config.toml"))
+        AppPaths::new().user_config_file()
     }
 
     /// Get the path to the system config file
     pub fn system_config_file() -> PathBuf {
-        PathBuf::from("/etc").join(APP_NAME).join("config.toml")
+        AppPaths::new().system_config_file()
     }
 }
 

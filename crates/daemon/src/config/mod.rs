@@ -1,51 +1,16 @@
+mod paths;
+
 use std::path::PathBuf;
 
 use figment::Figment;
 use figment::providers::{Env, Format, Serialized, Toml};
 use serde::{Deserialize, Serialize};
 
-/// Default Unix domain socket path
-pub const DEFAULT_SOCKET_PATH: &str = "/tmp/ffit-daemon.sock";
-
-/// Default TCP address
-pub const DEFAULT_TCP_ADDR: &str = "[::1]:50051";
-
-/// Default PID file path
-pub const DEFAULT_PID_FILE: &str = "/tmp/ffit-daemon.pid";
-
-/// Default lock file path
-pub const DEFAULT_LOCK_FILE: &str = "/tmp/ffit-daemon.lock";
-
-/// Default log file path
-pub const DEFAULT_LOG_FILE: &str = "/tmp/ffit-daemon.log";
-
-/// Default working directory for daemon
-pub const DEFAULT_WORKDIR: &str = "/";
-
-/// Daemon binary name
-pub const DAEMON_BINARY: &str = "ffit-daemon";
-
-/// Environment variable prefix for configuration
-pub const ENV_PREFIX: &str = "FFIT_";
-
-/// Application name for config directory
-pub const APP_NAME: &str = "ffit";
-
-pub fn default_socket_path() -> PathBuf {
-    PathBuf::from(DEFAULT_SOCKET_PATH)
-}
-
-pub fn default_pid_file() -> PathBuf {
-    PathBuf::from(DEFAULT_PID_FILE)
-}
-
-pub fn default_lock_file() -> PathBuf {
-    PathBuf::from(DEFAULT_LOCK_FILE)
-}
-
-pub fn default_log_file() -> PathBuf {
-    PathBuf::from(DEFAULT_LOG_FILE)
-}
+pub use paths::{
+    APP_NAME, AppPaths, DAEMON_BINARY, DEFAULT_TCP_ADDR, DEFAULT_WORKDIR, ENV_PREFIX,
+    default_lock_file, default_log_file, default_pid_file, default_socket_path, default_tcp_addr,
+    default_workdir,
+};
 
 /// Daemon configuration loaded from multiple sources
 ///
@@ -84,24 +49,16 @@ pub struct DaemonConfig {
     pub workdir: PathBuf,
 }
 
-fn default_tcp_addr() -> String {
-    DEFAULT_TCP_ADDR.to_string()
-}
-
-fn default_workdir() -> PathBuf {
-    PathBuf::from(DEFAULT_WORKDIR)
-}
-
 impl Default for DaemonConfig {
     fn default() -> Self {
         Self {
             foreground: false,
-            tcp_addr: DEFAULT_TCP_ADDR.to_string(),
+            tcp_addr: default_tcp_addr(),
             socket: default_socket_path(),
             pid_file: default_pid_file(),
             lock_file: default_lock_file(),
             log_file: default_log_file(),
-            workdir: PathBuf::from(DEFAULT_WORKDIR),
+            workdir: default_workdir(),
         }
     }
 }
@@ -119,20 +76,20 @@ impl DaemonConfig {
 
     /// Create a Figment instance with all configuration sources
     pub fn figment() -> Figment {
+        let paths = AppPaths::new();
         let mut figment = Figment::new().merge(Serialized::defaults(DaemonConfig::default()));
 
         // Add system config file (/etc/ffit/config.toml)
-        let system_config = PathBuf::from("/etc").join(APP_NAME).join("config.toml");
+        let system_config = paths.system_config_file();
         if system_config.exists() {
             figment = figment.merge(Toml::file(&system_config));
         }
 
         // Add user config file (~/.config/ffit/config.toml)
-        if let Some(config_dir) = dirs::config_dir() {
-            let user_config = config_dir.join(APP_NAME).join("config.toml");
-            if user_config.exists() {
-                figment = figment.merge(Toml::file(&user_config));
-            }
+        if let Some(user_config) = paths.user_config_file()
+            && user_config.exists()
+        {
+            figment = figment.merge(Toml::file(&user_config));
         }
 
         // Add environment variables with FFIT_ prefix
@@ -151,17 +108,17 @@ impl DaemonConfig {
 
     /// Get the path to the user config directory
     pub fn user_config_dir() -> Option<PathBuf> {
-        dirs::config_dir().map(|p| p.join(APP_NAME))
+        AppPaths::new().config_dir()
     }
 
     /// Get the path to the user config file
     pub fn user_config_file() -> Option<PathBuf> {
-        Self::user_config_dir().map(|p| p.join("config.toml"))
+        AppPaths::new().user_config_file()
     }
 
     /// Get the path to the system config file
     pub fn system_config_file() -> PathBuf {
-        PathBuf::from("/etc").join(APP_NAME).join("config.toml")
+        AppPaths::new().system_config_file()
     }
 }
 
@@ -177,7 +134,7 @@ mod tests {
         assert_eq!(config.socket, default_socket_path());
         assert_eq!(config.pid_file, default_pid_file());
         assert_eq!(config.log_file, default_log_file());
-        assert_eq!(config.workdir, PathBuf::from(DEFAULT_WORKDIR));
+        assert_eq!(config.workdir, default_workdir());
     }
 
     #[test]
