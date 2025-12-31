@@ -16,6 +16,9 @@ pub enum CtlError {
     #[error("failed to start daemon: {0}")]
     DaemonStartFailed(String),
 
+    #[error("failed to stop daemon: {0}")]
+    DaemonStopFailed(String),
+
     #[error("invalid PID in file: {0}")]
     InvalidPid(String),
 

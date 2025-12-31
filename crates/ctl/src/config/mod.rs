@@ -5,7 +5,7 @@ mod ctl;
 pub use constants::UDS_DUMMY_URI;
 pub use constants::{
     CONNECT_TIMEOUT, DAEMON_START_POLL_INTERVAL, DAEMON_START_RETRIES, GRACEFUL_SHUTDOWN_ATTEMPTS,
-    SHUTDOWN_POLL_INTERVAL,
+    KILL_WAIT_ATTEMPTS, SHUTDOWN_POLL_INTERVAL,
 };
 pub use ctl::CtlConfig;
 pub use daemon::config::{

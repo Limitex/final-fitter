@@ -1,7 +1,9 @@
 use tokio::time::sleep;
 use tracing::{debug, warn};
 
-use crate::config::{CtlConfig, GRACEFUL_SHUTDOWN_ATTEMPTS, SHUTDOWN_POLL_INTERVAL};
+use crate::config::{
+    CtlConfig, GRACEFUL_SHUTDOWN_ATTEMPTS, KILL_WAIT_ATTEMPTS, SHUTDOWN_POLL_INTERVAL,
+};
 use crate::error::{CtlError, Result};
 use crate::infra::process::{
     Signal, is_running, process_exists, read_pid, remove_pid_file, send_signal,
@@ -28,7 +30,19 @@ pub async fn execute(config: &CtlConfig) -> Result<()> {
 
     warn!(pid, "Graceful shutdown timed out, sending SIGKILL");
     send_signal(pid, Signal::Kill)?;
-    remove_pid_file(&config.pid_file);
-    log_warn!("Daemon killed");
-    Ok(())
+
+    // Wait for process to actually terminate after SIGKILL
+    for _ in 0..KILL_WAIT_ATTEMPTS {
+        sleep(SHUTDOWN_POLL_INTERVAL).await;
+        if !process_exists(pid) {
+            remove_pid_file(&config.pid_file);
+            log_warn!("Daemon killed");
+            return Ok(());
+        }
+    }
+
+    Err(CtlError::DaemonStopFailed(format!(
+        "process {} did not terminate after SIGKILL",
+        pid
+    )))
 }

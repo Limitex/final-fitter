@@ -7,3 +7,4 @@ pub const DAEMON_START_RETRIES: u32 = 10;
 pub const DAEMON_START_POLL_INTERVAL: Duration = Duration::from_millis(100);
 pub const GRACEFUL_SHUTDOWN_ATTEMPTS: u32 = 30;
 pub const SHUTDOWN_POLL_INTERVAL: Duration = Duration::from_millis(100);
+pub const KILL_WAIT_ATTEMPTS: u32 = 10;
