@@ -45,9 +45,48 @@ pub fn send_signal(pid: i32, signal: Signal) -> Result<()> {
     kill(Pid::from_raw(pid), sig).map_err(|e| CtlError::SignalFailed(e.to_string()))
 }
 
-#[cfg(not(unix))]
-pub fn send_signal(_pid: i32, _signal: Signal) -> Result<()> {
-    Err(CtlError::UnsupportedPlatform)
+#[cfg(windows)]
+pub fn send_signal(pid: i32, signal: Signal) -> Result<()> {
+    use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
+    use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_TERMINATE, TerminateProcess};
+
+    // On Windows, we can only terminate processes (no graceful SIGTERM equivalent)
+    // Both Term and Kill signals result in TerminateProcess
+    let exit_code: u32 = match signal {
+        Signal::Term => 0,
+        Signal::Kill => 1,
+    };
+
+    // SAFETY:
+    // - `OpenProcess` is called with a valid access right flag (PROCESS_TERMINATE)
+    //   and a PID obtained from our own PID file. The handle is checked for null
+    //   before use.
+    // - `TerminateProcess` is called with the valid handle obtained above.
+    // - `CloseHandle` is always called to release the handle, preventing leaks.
+    //   This is safe even if `TerminateProcess` fails, as the handle remains valid.
+    // - All Windows API functions are called with correct parameter types as
+    //   specified by windows-sys bindings.
+    unsafe {
+        let handle: HANDLE = OpenProcess(PROCESS_TERMINATE, 0, pid as u32);
+        if handle.is_null() {
+            return Err(CtlError::SignalFailed(format!(
+                "failed to open process {}: access denied or process not found",
+                pid
+            )));
+        }
+
+        let result = TerminateProcess(handle, exit_code);
+        CloseHandle(handle);
+
+        if result == 0 {
+            return Err(CtlError::SignalFailed(format!(
+                "failed to terminate process {}",
+                pid
+            )));
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(unix)]
@@ -59,9 +98,35 @@ pub fn process_exists(pid: i32) -> bool {
     kill(Pid::from_raw(pid), None).is_ok()
 }
 
-#[cfg(not(unix))]
-pub fn process_exists(_pid: i32) -> bool {
-    false
+#[cfg(windows)]
+pub fn process_exists(pid: i32) -> bool {
+    use windows_sys::Win32::Foundation::{CloseHandle, WAIT_TIMEOUT};
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, PROCESS_SYNCHRONIZE, WaitForSingleObject,
+    };
+
+    // SAFETY:
+    // - `OpenProcess` is called with PROCESS_SYNCHRONIZE flag, which is the minimum
+    //   required access right for `WaitForSingleObject`. The handle is checked for
+    //   null before use.
+    // - `WaitForSingleObject` is called with timeout 0 (non-blocking check) and a
+    //   valid handle. This only queries the process state without modifying it.
+    // - `CloseHandle` is always called to release the handle, preventing leaks.
+    // - All Windows API functions are called with correct parameter types as
+    //   specified by windows-sys bindings.
+    unsafe {
+        let handle = OpenProcess(PROCESS_SYNCHRONIZE, 0, pid as u32);
+        if handle.is_null() {
+            return false;
+        }
+
+        // WaitForSingleObject with timeout 0 checks if process is still running
+        let result = WaitForSingleObject(handle, 0);
+        CloseHandle(handle);
+
+        // WAIT_TIMEOUT means process is still running
+        result == WAIT_TIMEOUT
+    }
 }
 
 pub fn find_daemon_binary() -> OsString {
