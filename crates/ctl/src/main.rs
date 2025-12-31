@@ -1,12 +1,12 @@
 use std::process::ExitCode;
 
 use clap::Parser;
-use tracing::error;
 use tracing_subscriber::EnvFilter;
 
 use ctl::cli::{Args, Command};
 use ctl::commands;
 use ctl::config::CtlConfig;
+use ctl::log_error;
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -15,7 +15,7 @@ async fn main() -> ExitCode {
         .init();
 
     if let Err(e) = run().await {
-        error!(error = %e, "Command failed");
+        log_error!("{}", e);
         return ExitCode::FAILURE;
     }
     ExitCode::SUCCESS

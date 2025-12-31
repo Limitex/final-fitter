@@ -4,6 +4,7 @@ use tracing::debug;
 use crate::config::{CtlConfig, DAEMON_BINARY, DAEMON_START_POLL_INTERVAL, DAEMON_START_RETRIES};
 use crate::error::{CtlError, Result};
 use crate::infra::process::{is_running, process_exists, read_pid};
+use crate::log_success;
 
 pub async fn execute(config: &CtlConfig) -> Result<()> {
     debug!(pid_file = %config.pid_file.display(), "Checking if daemon is already running");
@@ -29,7 +30,7 @@ pub async fn execute(config: &CtlConfig) -> Result<()> {
         if let Ok(pid) = read_pid(&config.pid_file)
             && process_exists(pid)
         {
-            println!("Started daemon (PID: {})", pid);
+            log_success!("Started daemon (PID: {})", pid);
             return Ok(());
         }
     }

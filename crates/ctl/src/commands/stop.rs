@@ -5,6 +5,7 @@ use crate::error::{CtlError, Result};
 use crate::infra::process::{
     Signal, is_running, process_exists, read_pid, remove_pid_file, send_signal,
 };
+use crate::{log_success, log_warn};
 
 pub fn execute(config: &CtlConfig) -> Result<()> {
     if !is_running(&config.pid_file) {
@@ -19,7 +20,7 @@ pub fn execute(config: &CtlConfig) -> Result<()> {
         std::thread::sleep(SHUTDOWN_POLL_INTERVAL);
         if !process_exists(pid) {
             remove_pid_file(&config.pid_file);
-            println!("Daemon stopped");
+            log_success!("Daemon stopped");
             return Ok(());
         }
     }
@@ -27,6 +28,6 @@ pub fn execute(config: &CtlConfig) -> Result<()> {
     warn!(pid, "Graceful shutdown timed out, sending SIGKILL");
     send_signal(pid, Signal::Kill)?;
     remove_pid_file(&config.pid_file);
-    println!("Daemon killed");
+    log_warn!("Daemon killed");
     Ok(())
 }

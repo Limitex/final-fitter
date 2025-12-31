@@ -4,6 +4,7 @@ use crate::config::CtlConfig;
 use crate::error::{CtlError, Result};
 use crate::infra::grpc::connect;
 use crate::infra::process::is_running;
+use crate::log_success;
 
 pub async fn execute(config: &CtlConfig, message: &str) -> Result<()> {
     require_running(config)?;
@@ -17,7 +18,7 @@ pub async fn execute(config: &CtlConfig, message: &str) -> Result<()> {
         }))
         .await?;
 
-    println!("{}", response.into_inner().message);
+    log_success!("{}", response.into_inner().message);
     Ok(())
 }
 
