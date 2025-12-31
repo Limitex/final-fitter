@@ -1,10 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use figment::providers::{Env, Format, Serialized, Toml};
 use figment::Figment;
 use serde::{Deserialize, Serialize};
-
-use crate::cli::Args;
 
 /// Default Unix domain socket path
 pub const DEFAULT_SOCKET_PATH: &str = "/tmp/ffit-daemon.sock";
@@ -48,7 +46,6 @@ pub fn default_log_file() -> PathBuf {
 /// 1. Default values
 /// 2. Config file (~/.config/ffit/config.toml or /etc/ffit/config.toml)
 /// 3. Environment variables (FFIT_ prefix)
-/// 4. CLI arguments
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DaemonConfig {
     /// Run in foreground (don't daemonize)
@@ -132,35 +129,11 @@ impl DaemonConfig {
         figment
     }
 
-    /// Merge CLI arguments into the configuration
-    pub fn with_cli_args(self, args: &Args) -> Self {
+    /// Apply foreground flag from CLI
+    pub fn with_foreground(self, foreground: bool) -> Self {
         Self {
-            foreground: args.foreground || self.foreground,
-            tcp_addr: if args.tcp_addr != DEFAULT_TCP_ADDR {
-                args.tcp_addr.clone()
-            } else {
-                self.tcp_addr
-            },
-            socket: if args.socket != default_socket_path() {
-                args.socket.clone()
-            } else {
-                self.socket
-            },
-            pid_file: if args.pid_file != default_pid_file() {
-                args.pid_file.clone()
-            } else {
-                self.pid_file
-            },
-            log_file: if args.log_file != default_log_file() {
-                args.log_file.clone()
-            } else {
-                self.log_file
-            },
-            workdir: if args.workdir != Path::new(DEFAULT_WORKDIR) {
-                args.workdir.clone()
-            } else {
-                self.workdir
-            },
+            foreground: foreground || self.foreground,
+            ..self
         }
     }
 

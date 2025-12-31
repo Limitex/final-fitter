@@ -5,7 +5,6 @@
 # 2. System config file: /etc/ffit/config.toml
 # 3. User config file: ~/.config/ffit/config.toml
 # 4. Environment variables: FFIT_<KEY> (e.g., FFIT_TCP_ADDR)
-# 5. CLI arguments
 #
 # Copy this file to:
 #   - ~/.config/ffit/config.toml (user config)

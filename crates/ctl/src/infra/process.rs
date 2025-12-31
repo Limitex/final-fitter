@@ -37,7 +37,7 @@ pub enum Signal {
 
 #[cfg(unix)]
 pub fn send_signal(pid: i32, signal: Signal) -> Result<()> {
-    use nix::sys::signal::{kill, Signal as NixSignal};
+    use nix::sys::signal::{Signal as NixSignal, kill};
     use nix::unistd::Pid;
 
     let sig = match signal {

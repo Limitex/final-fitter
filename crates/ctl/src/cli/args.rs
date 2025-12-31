@@ -1,8 +1,4 @@
-use std::path::PathBuf;
-
 use clap::{Parser, Subcommand};
-
-use crate::config::{DEFAULT_PID_FILE, DEFAULT_SOCKET_PATH, DEFAULT_TCP_ADDR};
 
 #[derive(Parser)]
 #[command(name = "ffit")]
@@ -11,20 +7,8 @@ pub struct Args {
     #[command(subcommand)]
     pub command: Command,
 
-    /// PID file path
-    #[arg(long, global = true, default_value = DEFAULT_PID_FILE)]
-    pub pid_file: PathBuf,
-
-    /// Unix socket path
-    #[arg(long, global = true, default_value = DEFAULT_SOCKET_PATH)]
-    pub socket: PathBuf,
-
-    /// TCP address (used if UDS unavailable)
-    #[arg(long, global = true, default_value = DEFAULT_TCP_ADDR)]
-    pub tcp_addr: String,
-
-    /// Force TCP connection
-    #[arg(long, global = true, default_value = "false")]
+    /// Force TCP connection instead of Unix socket
+    #[arg(long, global = true)]
     pub tcp: bool,
 }
 

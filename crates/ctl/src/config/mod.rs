@@ -1,16 +1,13 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use figment::providers::{Env, Format, Serialized, Toml};
 use figment::Figment;
+use figment::providers::{Env, Format, Serialized, Toml};
 use serde::{Deserialize, Serialize};
-
-use crate::cli::Args;
 
 // Re-export shared constants from daemon
 pub use daemon::config::{
-    APP_NAME, DAEMON_BINARY, DEFAULT_PID_FILE, DEFAULT_SOCKET_PATH, DEFAULT_TCP_ADDR, ENV_PREFIX,
-    default_pid_file, default_socket_path,
+    APP_NAME, DAEMON_BINARY, DEFAULT_TCP_ADDR, ENV_PREFIX, default_pid_file, default_socket_path,
 };
 
 /// Connection timeout for gRPC clients
@@ -47,7 +44,6 @@ pub fn to_http_uri(addr: &str) -> String {
 /// 1. Default values
 /// 2. Config file (~/.config/ffit/config.toml or /etc/ffit/config.toml)
 /// 3. Environment variables (FFIT_ prefix)
-/// 4. CLI arguments
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CtlConfig {
     /// PID file path
@@ -126,26 +122,11 @@ impl CtlConfig {
         figment
     }
 
-    /// Merge CLI arguments into the configuration
-    pub fn with_cli_args(self, args: &Args) -> Self {
+    /// Apply TCP flag from CLI
+    pub fn with_tcp_flag(self, tcp: bool) -> Self {
         Self {
-            pid_file: if args.pid_file != default_pid_file() {
-                args.pid_file.clone()
-            } else {
-                self.pid_file
-            },
-            socket: if args.socket != default_socket_path() {
-                args.socket.clone()
-            } else {
-                self.socket
-            },
-            tcp_addr: if args.tcp_addr != DEFAULT_TCP_ADDR {
-                args.tcp_addr.clone()
-            } else {
-                self.tcp_addr
-            },
-            tcp: args.tcp || self.tcp,
-            connect_timeout_secs: self.connect_timeout_secs,
+            tcp: tcp || self.tcp,
+            ..self
         }
     }
 
@@ -193,10 +174,10 @@ mod tests {
     #[test]
     fn test_to_http_uri() {
         assert_eq!(to_http_uri("[::1]:50051"), "http://[::1]:50051");
-        assert_eq!(to_http_uri("http://localhost:8080"), "http://localhost:8080");
         assert_eq!(
-            to_http_uri("https://example.com"),
-            "https://example.com"
+            to_http_uri("http://localhost:8080"),
+            "http://localhost:8080"
         );
+        assert_eq!(to_http_uri("https://example.com"), "https://example.com");
     }
 }

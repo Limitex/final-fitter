@@ -9,19 +9,10 @@ pub async fn execute(config: &CtlConfig) -> Result<()> {
         return Err(CtlError::DaemonAlreadyRunning);
     }
 
-    // Daemon handles its own daemonization via daemonize crate
-    let status = Command::new(DAEMON_BINARY)
-        .arg("--pid-file")
-        .arg(&config.pid_file)
-        .arg("--socket")
-        .arg(&config.socket)
-        .arg("--tcp-addr")
-        .arg(&config.tcp_addr)
-        .status()
-        .await
-        .map_err(|e| {
-            CtlError::DaemonStartFailed(format!("{} (is {} in PATH?)", e, DAEMON_BINARY))
-        })?;
+    // Daemon loads its own config from file/env, no args needed
+    let status = Command::new(DAEMON_BINARY).status().await.map_err(|e| {
+        CtlError::DaemonStartFailed(format!("{} (is {} in PATH?)", e, DAEMON_BINARY))
+    })?;
 
     if !status.success() {
         return Err(CtlError::DaemonStartFailed(format!(

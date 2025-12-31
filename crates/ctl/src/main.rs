@@ -9,8 +9,8 @@ use ctl::error::Result;
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Load configuration with priority: defaults < config file < env vars < CLI args
-    let config = CtlConfig::load()?.with_cli_args(&args);
+    // Load configuration with priority: defaults < config file < env vars
+    let config = CtlConfig::load()?.with_tcp_flag(args.tcp);
 
     match &args.command {
         Command::Start => commands::start(&config).await,

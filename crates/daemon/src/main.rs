@@ -7,10 +7,10 @@ use daemon::{Server, ServerConfig};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    // Load configuration with priority: defaults < config file < env vars < CLI args
+    // Load configuration with priority: defaults < config file < env vars
     let config = DaemonConfig::load()
         .map_err(|e| format!("Failed to load configuration: {}", e))?
-        .with_cli_args(&args);
+        .with_foreground(args.foreground);
 
     if !config.foreground {
         if process::is_daemon_supported() {
