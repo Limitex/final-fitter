@@ -3,7 +3,7 @@ use tracing::debug;
 
 use crate::config::{CtlConfig, DAEMON_BINARY, DAEMON_START_POLL_INTERVAL, DAEMON_START_RETRIES};
 use crate::error::{CtlError, Result};
-use crate::infra::process::{is_running, process_exists, read_pid};
+use crate::infra::process::{find_daemon_binary, is_running, process_exists, read_pid};
 use crate::log_success;
 
 pub async fn execute(config: &CtlConfig) -> Result<()> {
@@ -12,8 +12,9 @@ pub async fn execute(config: &CtlConfig) -> Result<()> {
         return Err(CtlError::DaemonAlreadyRunning);
     }
 
-    debug!(binary = DAEMON_BINARY, "Spawning daemon process");
-    let status = Command::new(DAEMON_BINARY).status().await.map_err(|e| {
+    let daemon_path = find_daemon_binary();
+    debug!(binary = ?daemon_path, "Spawning daemon process");
+    let status = Command::new(&daemon_path).status().await.map_err(|e| {
         CtlError::DaemonStartFailed(format!("{} (is {} in PATH?)", e, DAEMON_BINARY))
     })?;
 

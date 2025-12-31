@@ -1,8 +1,10 @@
+use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 
 use tracing::warn;
 
+use crate::config::DAEMON_BINARY;
 use crate::error::{CtlError, Result};
 
 pub fn read_pid(pid_file: &Path) -> Result<i32> {
@@ -60,4 +62,16 @@ pub fn process_exists(pid: i32) -> bool {
 #[cfg(not(unix))]
 pub fn process_exists(_pid: i32) -> bool {
     false
+}
+
+pub fn find_daemon_binary() -> OsString {
+    if let Ok(current_exe) = std::env::current_exe()
+        && let Some(dir) = current_exe.parent()
+    {
+        let sibling = dir.join(DAEMON_BINARY);
+        if sibling.exists() {
+            return sibling.into_os_string();
+        }
+    }
+    OsString::from(DAEMON_BINARY)
 }
