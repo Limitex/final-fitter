@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use figment::providers::{Env, Format, Serialized, Toml};
 use figment::Figment;
+use figment::providers::{Env, Format, Serialized, Toml};
 use serde::{Deserialize, Serialize};
 
 /// Default Unix domain socket path
