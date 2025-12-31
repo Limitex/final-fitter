@@ -1,3 +1,4 @@
+use std::io::{self, ErrorKind};
 use std::net::SocketAddr;
 #[cfg(unix)]
 use std::path::{Path, PathBuf};
@@ -8,7 +9,7 @@ use tokio::net::UnixListener;
 use tokio_stream::wrappers::TcpListenerStream;
 #[cfg(unix)]
 use tokio_stream::wrappers::UnixListenerStream;
-use tracing::{debug, warn};
+use tracing::debug;
 
 pub enum ListenerStream {
     Tcp(TcpListenerStream),
@@ -33,7 +34,7 @@ impl ListenAddr {
         Self::Unix(path.as_ref().to_path_buf())
     }
 
-    pub async fn bind(&self) -> std::io::Result<ListenerStream> {
+    pub async fn bind(&self) -> io::Result<ListenerStream> {
         match self {
             Self::Tcp(addr) => {
                 debug!(address = %addr, "Binding TCP listener");
@@ -43,7 +44,13 @@ impl ListenAddr {
             #[cfg(unix)]
             Self::Unix(path) => {
                 if path.exists() {
-                    warn!(path = %path.display(), "Removing stale socket from previous crash");
+                    if is_socket_active(path).await {
+                        return Err(io::Error::new(
+                            ErrorKind::AddrInUse,
+                            format!("socket {} is in use by another process", path.display()),
+                        ));
+                    }
+                    debug!(path = %path.display(), "Removing stale socket");
                     std::fs::remove_file(path)?;
                 }
                 debug!(path = %path.display(), "Binding Unix socket");
@@ -69,5 +76,19 @@ impl std::fmt::Display for ListenAddr {
             #[cfg(unix)]
             Self::Unix(path) => write!(f, "unix://{}", path.display()),
         }
+    }
+}
+
+#[cfg(unix)]
+async fn is_socket_active(path: &Path) -> bool {
+    use tokio::net::UnixStream;
+    use tokio::time::{Duration, timeout};
+
+    match timeout(Duration::from_millis(100), UnixStream::connect(path)).await {
+        Ok(Ok(_)) => {
+            debug!(path = %path.display(), "Socket is active");
+            true
+        }
+        _ => false,
     }
 }
