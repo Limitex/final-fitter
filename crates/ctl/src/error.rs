@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, CtlError>;
@@ -9,17 +7,14 @@ pub enum CtlError {
     #[error("configuration error: {0}")]
     ConfigError(#[from] Box<figment::Error>),
 
-    #[error("daemon is not running (start with: ffit start)")]
-    DaemonNotRunning,
+    #[error("daemon is already running")]
+    DaemonAlreadyRunning,
 
-    #[error("no listeners configured")]
-    NoListenersConfigured,
+    #[error("daemon is not running")]
+    DaemonNotRunning,
 
     #[error("failed to start daemon: {0}")]
     DaemonStartFailed(String),
-
-    #[error("PID file not found: {}", .0.display())]
-    PidFileNotFound(PathBuf),
 
     #[error("invalid PID in file: {0}")]
     InvalidPid(String),

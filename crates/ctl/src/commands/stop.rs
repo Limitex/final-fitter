@@ -1,8 +1,12 @@
 use crate::config::{CtlConfig, GRACEFUL_SHUTDOWN_ATTEMPTS, SHUTDOWN_POLL_INTERVAL};
-use crate::error::Result;
-use crate::infra::process::{Signal, process_exists, read_pid, remove_pid_file, send_signal};
+use crate::error::{CtlError, Result};
+use crate::infra::process::{Signal, is_running, process_exists, read_pid, remove_pid_file, send_signal};
 
 pub fn execute(config: &CtlConfig) -> Result<()> {
+    if !is_running(&config.pid_file) {
+        return Err(CtlError::DaemonNotRunning);
+    }
+
     let pid = read_pid(&config.pid_file)?;
 
     // Graceful shutdown with SIGTERM
