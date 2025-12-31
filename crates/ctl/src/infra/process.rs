@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::Path;
 
+use tracing::warn;
+
 use crate::error::{CtlError, Result};
 
 pub fn read_pid(pid_file: &Path) -> Result<i32> {
@@ -13,7 +15,9 @@ pub fn read_pid(pid_file: &Path) -> Result<i32> {
 }
 
 pub fn remove_pid_file(pid_file: &Path) {
-    let _ = fs::remove_file(pid_file);
+    if let Err(e) = fs::remove_file(pid_file) {
+        warn!(path = %pid_file.display(), error = %e, "Failed to remove PID file");
+    }
 }
 
 pub fn is_running(pid_file: &Path) -> bool {
