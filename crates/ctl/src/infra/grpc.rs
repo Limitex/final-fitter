@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tonic::transport::{Channel, Endpoint};
 
-use crate::config::{CtlConfig, to_http_uri};
+use crate::config::CtlConfig;
 use crate::error::{CtlError, Result};
 
 /// Prefer UDS over TCP unless --tcp flag is set.
@@ -62,4 +62,27 @@ async fn connect_tcp(addr: &str, timeout: Duration) -> Result<Channel> {
         .map_err(|e| CtlError::ConnectionFailed(format!("TCP: {}", e)))?;
 
     Ok(channel)
+}
+
+fn to_http_uri(addr: &str) -> String {
+    if addr.starts_with("http://") || addr.starts_with("https://") {
+        addr.to_string()
+    } else {
+        format!("http://{}", addr)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_to_http_uri() {
+        assert_eq!(to_http_uri("[::1]:50051"), "http://[::1]:50051");
+        assert_eq!(
+            to_http_uri("http://localhost:8080"),
+            "http://localhost:8080"
+        );
+        assert_eq!(to_http_uri("https://example.com"), "https://example.com");
+    }
 }
