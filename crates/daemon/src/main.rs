@@ -26,7 +26,7 @@ fn main() -> Result<()> {
 }
 
 async fn run_server(config: DaemonConfig) -> Result<()> {
-    let mut server_config = ServerConfig::new().with_tcp(config.tcp_addr.parse()?);
+    let mut server_config = ServerConfig::default().with_tcp(config.tcp_addr.parse()?);
 
     #[cfg(unix)]
     {

@@ -9,7 +9,7 @@ pub struct Container {
 
 impl Container {
     pub fn new() -> Self {
-        let ping_use_case = PingUseCase::new();
+        let ping_use_case = PingUseCase;
         let ping_handler = Arc::new(PingHandler::new(ping_use_case));
 
         Self { ping_handler }

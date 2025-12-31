@@ -5,10 +5,6 @@ use crate::error::DaemonError;
 pub struct PingUseCase;
 
 impl PingUseCase {
-    pub fn new() -> Self {
-        Self
-    }
-
     pub fn ping(&self, message: String) -> Result<String, DaemonError> {
         let ping = PingMessage::new(message)?;
         let pong = ping.to_pong();

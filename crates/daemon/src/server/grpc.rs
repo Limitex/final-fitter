@@ -17,10 +17,6 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_tcp(mut self, addr: std::net::SocketAddr) -> Self {
         self.tcp = Some(ListenAddr::tcp(addr));
         self
