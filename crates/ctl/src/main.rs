@@ -27,8 +27,8 @@ async fn run() -> ctl::error::Result<()> {
 
     match &args.command {
         Command::Start => commands::start(&config).await,
-        Command::Stop => commands::stop(&config),
-        Command::Status => commands::status(&config),
+        Command::Stop => commands::stop(&config).await,
+        Command::Status => commands::status(&config).await,
         Command::Ping { message } => commands::ping(&config, message).await,
     }
 }

@@ -1,3 +1,4 @@
+use tokio::time::sleep;
 use tracing::{debug, warn};
 
 use crate::config::{CtlConfig, GRACEFUL_SHUTDOWN_ATTEMPTS, SHUTDOWN_POLL_INTERVAL};
@@ -7,7 +8,7 @@ use crate::infra::process::{
 };
 use crate::{log_success, log_warn};
 
-pub fn execute(config: &CtlConfig) -> Result<()> {
+pub async fn execute(config: &CtlConfig) -> Result<()> {
     if !is_running(&config.pid_file) {
         return Err(CtlError::DaemonNotRunning);
     }
@@ -17,7 +18,7 @@ pub fn execute(config: &CtlConfig) -> Result<()> {
     send_signal(pid, Signal::Term)?;
 
     for _ in 0..GRACEFUL_SHUTDOWN_ATTEMPTS {
-        std::thread::sleep(SHUTDOWN_POLL_INTERVAL);
+        sleep(SHUTDOWN_POLL_INTERVAL).await;
         if !process_exists(pid) {
             remove_pid_file(&config.pid_file);
             log_success!("Daemon stopped");
