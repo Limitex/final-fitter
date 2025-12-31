@@ -6,6 +6,13 @@ pub fn daemonize(config: &DaemonConfig) -> Result<()> {
     use daemonize::Daemonize;
     use std::fs::OpenOptions;
 
+    if let Some(parent) = config.log_file.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    if let Some(parent) = config.pid_file.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+
     let log_file = OpenOptions::new()
         .create(true)
         .append(true)
