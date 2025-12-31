@@ -18,7 +18,6 @@ impl PingMessage {
         &self.value
     }
 
-    /// Creates a pong response from this message.
     pub fn to_pong(&self) -> Self {
         Self {
             value: format!("pong: {}", self.value),

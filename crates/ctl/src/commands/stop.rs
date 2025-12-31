@@ -5,9 +5,9 @@ use crate::infra::process::{Signal, process_exists, read_pid, remove_pid_file, s
 pub fn execute(config: &CtlConfig) -> Result<()> {
     let pid = read_pid(&config.pid_file)?;
 
+    // Graceful shutdown with SIGTERM
     send_signal(pid, Signal::Term)?;
 
-    // Wait for graceful shutdown
     for _ in 0..GRACEFUL_SHUTDOWN_ATTEMPTS {
         std::thread::sleep(SHUTDOWN_POLL_INTERVAL);
         if !process_exists(pid) {
@@ -17,7 +17,7 @@ pub fn execute(config: &CtlConfig) -> Result<()> {
         }
     }
 
-    // Force kill if still running
+    // Force kill if graceful shutdown timed out
     send_signal(pid, Signal::Kill)?;
     remove_pid_file(&config.pid_file);
     println!("Daemon killed");

@@ -44,7 +44,6 @@ impl Server {
 
         let mut handles = Vec::new();
 
-        // TCP
         if let Some(addr) = &self.config.tcp {
             let stream = addr.bind().await?;
             let container = Arc::clone(&container);
@@ -69,7 +68,6 @@ impl Server {
             handles.push(handle);
         }
 
-        // UDS (Unix only)
         #[cfg(unix)]
         if let Some(addr) = &self.config.uds {
             let stream = addr.bind().await?;

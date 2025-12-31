@@ -3,7 +3,6 @@ use std::path::Path;
 
 use crate::error::{CtlError, Result};
 
-/// Read PID from file
 pub fn read_pid(pid_file: &Path) -> Result<i32> {
     let contents = fs::read_to_string(pid_file)
         .map_err(|_| CtlError::PidFileNotFound(pid_file.to_path_buf()))?;
@@ -14,12 +13,10 @@ pub fn read_pid(pid_file: &Path) -> Result<i32> {
         .map_err(|_| CtlError::InvalidPid(contents.trim().to_string()))
 }
 
-/// Remove PID file
 pub fn remove_pid_file(pid_file: &Path) {
     let _ = fs::remove_file(pid_file);
 }
 
-/// Check if daemon is running based on PID file
 pub fn is_running(pid_file: &Path) -> bool {
     read_pid(pid_file).map(process_exists).unwrap_or(false)
 }
@@ -53,6 +50,7 @@ pub fn process_exists(pid: i32) -> bool {
     use nix::sys::signal::kill;
     use nix::unistd::Pid;
 
+    // Signal 0 checks if process exists without sending a signal
     kill(Pid::from_raw(pid), None).is_ok()
 }
 

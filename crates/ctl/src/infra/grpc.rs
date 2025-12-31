@@ -5,16 +5,14 @@ use tonic::transport::{Channel, Endpoint};
 use crate::config::{CtlConfig, to_http_uri};
 use crate::error::{CtlError, Result};
 
-/// Connect to daemon, preferring UDS over TCP unless --tcp flag is set
+/// Prefer UDS over TCP unless --tcp flag is set.
 pub async fn connect(config: &CtlConfig) -> Result<Channel> {
     let timeout = config.connect_timeout();
 
-    // --tcp flag forces TCP
     if config.tcp {
         return connect_tcp(&config.tcp_addr, timeout).await;
     }
 
-    // Try UDS first (Unix only)
     #[cfg(unix)]
     if config.socket.exists() {
         match connect_uds(&config.socket, timeout).await {
@@ -25,7 +23,6 @@ pub async fn connect(config: &CtlConfig) -> Result<Channel> {
         }
     }
 
-    // Fallback to TCP
     connect_tcp(&config.tcp_addr, timeout).await
 }
 
@@ -37,6 +34,7 @@ async fn connect_uds(path: &std::path::Path, timeout: Duration) -> Result<Channe
 
     let path = path.to_path_buf();
 
+    // Tonic requires a URI but ignores it for custom connectors
     let channel = Endpoint::from_static(UDS_DUMMY_URI)
         .connect_timeout(timeout)
         .connect_with_connector(service_fn(move |_: Uri| {
@@ -54,7 +52,6 @@ async fn connect_uds(path: &std::path::Path, timeout: Duration) -> Result<Channe
 }
 
 async fn connect_tcp(addr: &str, timeout: Duration) -> Result<Channel> {
-    // Ensure the address has a scheme (http://)
     let uri = to_http_uri(addr);
 
     let channel = Channel::from_shared(uri)

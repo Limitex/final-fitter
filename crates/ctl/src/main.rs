@@ -8,8 +8,6 @@ use ctl::error::Result;
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-
-    // Load configuration with priority: defaults < config file < env vars
     let config = CtlConfig::load()?.with_tcp_flag(args.tcp);
 
     match &args.command {

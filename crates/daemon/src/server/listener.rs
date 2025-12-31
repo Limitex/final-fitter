@@ -40,6 +40,7 @@ impl ListenAddr {
             }
             #[cfg(unix)]
             Self::Unix(path) => {
+                // Remove stale socket from previous run
                 if path.exists() {
                     std::fs::remove_file(path)?;
                 }

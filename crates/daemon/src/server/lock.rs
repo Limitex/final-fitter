@@ -5,8 +5,7 @@ use std::path::Path;
 #[cfg(unix)]
 use nix::fcntl::{Flock, FlockArg};
 
-/// A file lock guard that holds an exclusive lock on a lock file.
-/// The lock is automatically released when this guard is dropped.
+/// Exclusive lock on a file, automatically released when dropped.
 #[cfg(unix)]
 pub struct LockGuard {
     _flock: Flock<File>,
@@ -14,10 +13,7 @@ pub struct LockGuard {
 
 #[cfg(unix)]
 impl LockGuard {
-    /// Acquire an exclusive lock on the lock file.
-    /// Returns an error if the lock is already held by another process.
     pub fn try_acquire(lock_path: &Path) -> io::Result<Self> {
-        // Ensure parent directory exists
         if let Some(parent) = lock_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -29,6 +25,7 @@ impl LockGuard {
             .write(true)
             .open(lock_path)?;
 
+        // Non-blocking: fail immediately if another daemon holds the lock
         let flock = Flock::lock(file, FlockArg::LockExclusiveNonblock).map_err(|(_, errno)| {
             if errno == nix::errno::Errno::EWOULDBLOCK {
                 io::Error::new(io::ErrorKind::WouldBlock, "daemon is already running")

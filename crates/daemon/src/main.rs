@@ -8,12 +8,11 @@ use daemon::{Server, ServerConfig};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    // Load configuration with priority: defaults < config file < env vars
     let config = DaemonConfig::load()
         .map_err(|e| format!("Failed to load configuration: {}", e))?
         .with_foreground(args.foreground);
 
-    // Acquire exclusive lock before daemonizing to prevent TOCTOU race
+    // Acquire lock before daemonizing to prevent TOCTOU race
     let _lock_guard = LockGuard::try_acquire(&config.lock_file)
         .map_err(|e| format!("Failed to acquire lock: {}", e))?;
 
@@ -25,7 +24,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Lock is held for the lifetime of the daemon process
     tokio::runtime::Runtime::new()?.block_on(run_server(config))
 }
 
