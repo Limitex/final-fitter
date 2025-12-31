@@ -8,7 +8,7 @@ use tokio::net::UnixListener;
 use tokio_stream::wrappers::TcpListenerStream;
 #[cfg(unix)]
 use tokio_stream::wrappers::UnixListenerStream;
-use tracing::debug;
+use tracing::{debug, warn};
 
 pub enum ListenerStream {
     Tcp(TcpListenerStream),
@@ -43,7 +43,7 @@ impl ListenAddr {
             #[cfg(unix)]
             Self::Unix(path) => {
                 if path.exists() {
-                    debug!(path = %path.display(), "Removing stale socket");
+                    warn!(path = %path.display(), "Removing stale socket from previous crash");
                     std::fs::remove_file(path)?;
                 }
                 debug!(path = %path.display(), "Binding Unix socket");
