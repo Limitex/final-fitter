@@ -7,6 +7,8 @@ members = ["crates/compute", "crates/ctl", "crates/daemon", "crates/types"]
 types = { path = "crates/types" }
 compute = { path = "crates/compute" }
 daemon = { path = "crates/daemon" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [profile.release]
 opt-level = 3

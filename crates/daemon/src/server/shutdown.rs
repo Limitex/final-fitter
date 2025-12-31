@@ -1,4 +1,5 @@
 use tokio::sync::broadcast;
+use tracing::info;
 
 #[derive(Clone)]
 pub struct ShutdownSignal {
@@ -50,7 +51,7 @@ pub async fn wait_for_signal() {
     let terminate = std::future::pending::<()>();
 
     tokio::select! {
-        _ = ctrl_c => println!("\nReceived Ctrl+C"),
-        _ = terminate => println!("\nReceived SIGTERM"),
+        _ = ctrl_c => info!("Received Ctrl+C"),
+        _ = terminate => info!("Received SIGTERM"),
     }
 }

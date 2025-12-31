@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use tonic::transport::{Channel, Endpoint};
+use tracing::{debug, warn};
 
 use crate::config::CtlConfig;
 use crate::error::{CtlError, Result};
@@ -10,19 +11,25 @@ pub async fn connect(config: &CtlConfig) -> Result<Channel> {
     let timeout = config.connect_timeout();
 
     if config.tcp {
+        debug!(address = %config.tcp_addr, "Connecting via TCP (forced)");
         return connect_tcp(&config.tcp_addr, timeout).await;
     }
 
     #[cfg(unix)]
     if config.socket.exists() {
+        debug!(path = %config.socket.display(), "Attempting UDS connection");
         match connect_uds(&config.socket, timeout).await {
-            Ok(channel) => return Ok(channel),
+            Ok(channel) => {
+                debug!("UDS connection established");
+                return Ok(channel);
+            }
             Err(e) => {
-                eprintln!("UDS connection failed, falling back to TCP: {}", e);
+                warn!(error = %e, "UDS connection failed, falling back to TCP");
             }
         }
     }
 
+    debug!(address = %config.tcp_addr, "Connecting via TCP");
     connect_tcp(&config.tcp_addr, timeout).await
 }
 

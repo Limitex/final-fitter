@@ -1,6 +1,8 @@
 use std::process::ExitCode;
 
 use clap::Parser;
+use tracing::error;
+use tracing_subscriber::EnvFilter;
 
 use ctl::cli::{Args, Command};
 use ctl::commands;
@@ -8,8 +10,12 @@ use ctl::config::CtlConfig;
 
 #[tokio::main]
 async fn main() -> ExitCode {
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env().add_directive("ctl=warn".parse().unwrap()))
+        .init();
+
     if let Err(e) = run().await {
-        eprintln!("Error: {e}");
+        error!(error = %e, "Command failed");
         return ExitCode::FAILURE;
     }
     ExitCode::SUCCESS

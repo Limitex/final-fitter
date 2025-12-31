@@ -4,8 +4,7 @@ use std::path::Path;
 use crate::error::{CtlError, Result};
 
 pub fn read_pid(pid_file: &Path) -> Result<i32> {
-    let contents =
-        fs::read_to_string(pid_file).map_err(|_| CtlError::DaemonNotRunning)?;
+    let contents = fs::read_to_string(pid_file).map_err(|_| CtlError::DaemonNotRunning)?;
 
     contents
         .trim()

@@ -1,6 +1,8 @@
 use std::fs::{File, OpenOptions};
 use std::path::Path;
 
+use tracing::{debug, warn};
+
 use crate::error::{DaemonError, Result};
 
 #[cfg(unix)]
@@ -26,15 +28,17 @@ impl LockGuard {
             .write(true)
             .open(lock_path)?;
 
-        // Non-blocking: fail immediately if another daemon holds the lock
+        debug!(path = %lock_path.display(), "Attempting to acquire exclusive lock");
         let flock = Flock::lock(file, FlockArg::LockExclusiveNonblock).map_err(|(_, errno)| {
             if errno == nix::errno::Errno::EWOULDBLOCK {
+                warn!(path = %lock_path.display(), "Another daemon instance is already running");
                 DaemonError::AlreadyRunning
             } else {
                 DaemonError::LockError(errno.to_string())
             }
         })?;
 
+        debug!(path = %lock_path.display(), "Exclusive lock acquired");
         Ok(Self { _flock: flock })
     }
 }

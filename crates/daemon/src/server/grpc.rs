@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
 use tonic::transport::server::Router;
+use tracing::{error, info};
 
 use crate::di::Container;
 use crate::error::{DaemonError, Result};
-use crate::generated::ping_service_server::PingServiceServer;
 use crate::generated::FILE_DESCRIPTOR_SET;
+use crate::generated::ping_service_server::PingServiceServer;
 use crate::server::listener::{ListenAddr, ListenerStream};
 use crate::server::shutdown::{ShutdownSignal, wait_for_signal};
 
@@ -50,7 +51,7 @@ impl Server {
             let shutdown = shutdown.clone();
             let addr_display = addr.to_string();
 
-            println!("Listening on {}", addr_display);
+            info!(address = %addr_display, "Listening on TCP");
 
             let handle = tokio::spawn(async move {
                 if let ListenerStream::Tcp(listener) = stream {
@@ -60,7 +61,7 @@ impl Server {
                         .await;
 
                     if let Err(e) = result {
-                        eprintln!("TCP server error: {}", e);
+                        error!(error = %e, "TCP server error");
                     }
                 }
             });
@@ -75,7 +76,7 @@ impl Server {
             let shutdown = shutdown.clone();
             let addr_display = addr.to_string();
 
-            println!("Listening on {}", addr_display);
+            info!(address = %addr_display, "Listening on UDS");
 
             let handle = tokio::spawn(async move {
                 if let ListenerStream::Unix(listener) = stream {
@@ -85,7 +86,7 @@ impl Server {
                         .await;
 
                     if let Err(e) = result {
-                        eprintln!("UDS server error: {}", e);
+                        error!(error = %e, "UDS server error");
                     }
                 }
             });
@@ -98,7 +99,7 @@ impl Server {
         }
 
         wait_for_signal().await;
-        println!("Shutting down gracefully...");
+        info!("Shutting down gracefully...");
 
         shutdown.trigger();
 
@@ -111,7 +112,7 @@ impl Server {
             addr.cleanup();
         }
 
-        println!("Server stopped");
+        info!("Server stopped");
         Ok(())
     }
 }

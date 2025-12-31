@@ -8,6 +8,7 @@ use tokio::net::UnixListener;
 use tokio_stream::wrappers::TcpListenerStream;
 #[cfg(unix)]
 use tokio_stream::wrappers::UnixListenerStream;
+use tracing::debug;
 
 pub enum ListenerStream {
     Tcp(TcpListenerStream),
@@ -35,15 +36,17 @@ impl ListenAddr {
     pub async fn bind(&self) -> std::io::Result<ListenerStream> {
         match self {
             Self::Tcp(addr) => {
+                debug!(address = %addr, "Binding TCP listener");
                 let listener = TcpListener::bind(addr).await?;
                 Ok(ListenerStream::Tcp(TcpListenerStream::new(listener)))
             }
             #[cfg(unix)]
             Self::Unix(path) => {
-                // Remove stale socket from previous run
                 if path.exists() {
+                    debug!(path = %path.display(), "Removing stale socket");
                     std::fs::remove_file(path)?;
                 }
+                debug!(path = %path.display(), "Binding Unix socket");
                 let listener = UnixListener::bind(path)?;
                 Ok(ListenerStream::Unix(UnixListenerStream::new(listener)))
             }
@@ -53,6 +56,7 @@ impl ListenAddr {
     #[cfg(unix)]
     pub fn cleanup(&self) {
         if let Self::Unix(path) = self {
+            debug!(path = %path.display(), "Cleaning up Unix socket");
             let _ = std::fs::remove_file(path);
         }
     }
