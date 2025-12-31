@@ -108,7 +108,9 @@ impl Server {
         shutdown.trigger();
 
         for handle in handles {
-            let _ = handle.await;
+            if let Err(e) = handle.await {
+                error!(error = %e, "Listener task panicked during shutdown");
+            }
         }
 
         #[cfg(unix)]
