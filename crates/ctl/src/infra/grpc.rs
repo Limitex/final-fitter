@@ -24,7 +24,11 @@ pub async fn connect(config: &CtlConfig) -> Result<Channel> {
                 return Ok(channel);
             }
             Err(e) => {
-                warn!(error = %e, "UDS connection failed, falling back to TCP");
+                warn!(
+                    error = %e,
+                    socket = %config.socket.display(),
+                    "UDS connection failed (socket exists but daemon may not be running), falling back to TCP"
+                );
             }
         }
     }
